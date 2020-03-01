@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  webserver:
+      build:
+        context: "./docker/config/webserver"
+      container_name: 'lamp_webserver'
+      restart: 'always'
+      working_dir: /var/www
+      ports:
+        - "80:80"
+        - "443:443"
+      links:
+        - mysql
+      volumes:
+        - .:/var/www
+        - ./public:/var/www/public
+        - ./docker/config/webserver/php/php.ini:/usr/local/etc/php/php.ini
+        - ./docker/config/webserver/vhosts:/etc/apache2/sites-enabled
+        - ./docker/bin/webserver/logs:/var/log/apache2
+
+  mysql:
+      build:
+          context: "./docker/config/mysql"
+      container_name: 'lamp_mysql'
+      restart: 'always'
+      ports:
+          - "3306:3306"
+      volumes:
+          - ./docker/bin/mysql/data:/var/lib/mysql
+          - ./docker/bin/mysql/logs:/var/log/mysql
+      environment:
+          MYSQL_ROOT_PASSWORD: asdf
+          MYSQL_DATABASE: docker
+          MYSQL_USER: docker
+          MYSQL_PASSWORD: docker
+  phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: 'lamp_phpmyadmin'
+      links:
+        - mysql
+      environment:
+        PMA_HOST: mysql
+        PMA_PORT: 3306
+        MYSQL_ROOT_PASSWORD: asdf
+        MYSQL_USER: docker
+        MYSQL_PASSWORD: docker
+      ports:
+        - '8080:80'
+      volumes:
+        - /sessions
